@@ -1,7 +1,7 @@
 // 캔버스 설정
 const canvas = document.getElementById('gameCanvas');
-canvas.width = 800;
-canvas.height = 600;
+canvas.width = 750;
+canvas.height = 800;
 const ctx = canvas.getContext('2d');
 
 // 오디오 요소 가져오기
@@ -27,7 +27,7 @@ collisionSound.addEventListener('loadedmetadata', () => {
 // 플레이어 우주선
 const player = {
     x: canvas.width / 2,
-    y: canvas.height - 50,
+    y: canvas.height - 80,
     width: 40,
     height: 40,
     speed: 8
@@ -36,7 +36,7 @@ const player = {
 // 두 번째 비행기
 const secondPlane = {
     x: canvas.width / 2 - 60,
-    y: canvas.height - 50,
+    y: canvas.height - 80,
     width: 40,
     height: 40,
     speed: 8
@@ -655,9 +655,9 @@ async function initializeGame() {
         
         // 6. 플레이어 초기 위치 설정
         player.x = canvas.width / 2;
-        player.y = canvas.height - 50;
+        player.y = canvas.height - 80;
         secondPlane.x = canvas.width / 2 - 60;
-        secondPlane.y = canvas.height - 50;
+        secondPlane.y = canvas.height - 80;
         
         // 7. 게임 타이머 초기화
         lastEnemySpawnTime = 0;
@@ -757,9 +757,9 @@ function restartGame() {
     
     // 3. 플레이어 위치 초기화
     player.x = canvas.width / 2;
-    player.y = canvas.height - 50;
+    player.y = canvas.height - 80;
     secondPlane.x = canvas.width / 2 - 60;
-    secondPlane.y = canvas.height - 50;
+    secondPlane.y = canvas.height - 80;
     
     // 4. 게임 타이머 및 상태 초기화
     gameOverStartTime = null;
@@ -4119,9 +4119,9 @@ async function initializeGame() {
         
         // 6. 플레이어 초기 위치 설정
         player.x = canvas.width / 2;
-        player.y = canvas.height - 50;
+        player.y = canvas.height - 80;
         secondPlane.x = canvas.width / 2 - 60;
-        secondPlane.y = canvas.height - 50;
+        secondPlane.y = canvas.height - 80;
         
         // 7. 게임 타이머 초기화
         lastEnemySpawnTime = 0;
@@ -4243,9 +4243,9 @@ function restartGame() {
     
     // 3. 플레이어 위치 초기화
     player.x = canvas.width / 2;
-    player.y = canvas.height - 50;
+    player.y = canvas.height - 80;
     secondPlane.x = canvas.width / 2 - 60;
-    secondPlane.y = canvas.height - 50;
+    secondPlane.y = canvas.height - 80;
     
     // 4. 게임 타이머 및 상태 초기화
     gameOverStartTime = null;

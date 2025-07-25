@@ -8,15 +8,16 @@
             padding: 0;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
             background-color: #E0E0E0;
             overflow: hidden;
+            padding-top: 40px;
         }
         canvas {
             display: block;
-            width: 800px;
-            height: 600px;
+            width: 750px;
+            height: 800px;
             background-color: black;
         }
         #soundPanel {
@@ -70,7 +71,7 @@
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <canvas id="gameCanvas" width="750" height="800"></canvas>
     
     <!-- 사운드 컨트롤 패널 -->
     <div id="soundPanel">
