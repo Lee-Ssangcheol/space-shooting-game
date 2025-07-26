@@ -3737,7 +3737,7 @@ function drawStartScreen() {
     ctx.shadowOffsetY = 5;
 
     // 제목
-    ctx.font = 'bold 80px Arial';
+    ctx.font = 'bold 60px Arial';
     ctx.fillStyle = titleGradient;
     ctx.textAlign = 'center';
     ctx.fillText('SPACE SHOOTER', canvas.width/2, titleY);
