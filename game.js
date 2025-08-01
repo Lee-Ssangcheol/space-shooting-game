@@ -2383,49 +2383,26 @@ function drawUI() {
     }
     ctx.fillText(`일시정지: P키`, 10, 240);
     
-    // 현재 난이도 설정 가져오기
-    const currentDifficulty = difficultySettings[Math.min(gameLevel, 5)] || {
-        enemySpeed: 6 + (gameLevel - 5) * 0.5,
-        enemySpawnRate: 0.06 + (gameLevel - 5) * 0.01,
-        horizontalSpeedRange: 6 + (gameLevel - 5) * 0.5,
-        patternChance: 1.0,
-        maxEnemies: 20 + (gameLevel - 5) * 2,
-        bossHealth: 2000 + (gameLevel - 5) * 500,
-        bossSpawnInterval: Math.max(10000, 20000 - (gameLevel - 5) * 1000),
-        powerUpChance: 0.3,
-        bombDropChance: 0.3,
-        dynamiteDropChance: 0.25
-    };
-    
-    ctx.fillText(`현재 적 수: ${enemies.length}/${currentDifficulty.maxEnemies}`, 10, 270);
-    
-    // 충돌 횟수 표시 (붉은색으로)
+    // 남은 목숨 표시 (일시정지 다음 줄로 이동)
     ctx.fillStyle = 'red';
-    ctx.fillText(`남은 목숨: ${maxLives - collisionCount}`, 10, 300);
-
-    // 제작자 정보 표시
-    ctx.fillStyle = 'white';
-    ctx.font = '16px Arial';
-    ctx.textAlign = 'right';
-    ctx.fillText('제작/저작권자:Lee.SS.C', canvas.width - 20, canvas.height - 20); 
-
+    ctx.fillText(`남은 목숨: ${maxLives - collisionCount}`, 10, 270);
     
-    // 특수 무기 게이지 표시
+    // 특수 무기 게이지 표시 (남은 목숨 다음 줄로 이동)
     if (!specialWeaponCharged) {
         // 게이지 바 배경
         ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.fillRect(10, 340, 200, 20);
+        ctx.fillRect(10, 300, 200, 20);
         
         // 게이지 바
         ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
-        ctx.fillRect(10, 340, (specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE) * 200, 20);
+        ctx.fillRect(10, 300, (specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE) * 200, 20);
         
         // 게이지 바 위에 텍스트 표시
         ctx.fillStyle = 'white';
         ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'center';
         const percentText = `특수 무기 : ${Math.floor((specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE) * 100)}%`;
-        ctx.fillText(percentText, 110, 355);
+        ctx.fillText(percentText, 110, 315);
     } else {
         // 깜빡이는 효과를 위한 시간 계산
         const blinkSpeed = 500; // 깜빡임 속도 (밀리초)
@@ -2434,30 +2411,36 @@ function drawUI() {
         
         // 배경색 설정 (게이지 바)
         ctx.fillStyle = isRed ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 0, 255, 0.3)';
-        ctx.fillRect(10, 340, 200, 20);
+        ctx.fillRect(10, 300, 200, 20);
         
         // 테두리 효과
         ctx.strokeStyle = isRed ? 'red' : 'cyan';
         ctx.lineWidth = 2;
-        ctx.strokeRect(10, 340, 200, 20);
+        ctx.strokeRect(10, 300, 200, 20);
         
         // 게이지 바 위에 텍스트 표시
         ctx.fillStyle = isRed ? 'red' : 'cyan';
         ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'center';
         const percentText = `특수 무기 : ${Math.floor((specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE) * 100)}%`;
-        ctx.fillText(percentText, 110, 355);
+        ctx.fillText(percentText, 110, 315);
         
         // 준비 완료 메시지 배경
         ctx.fillStyle = isRed ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 0, 255, 0.2)';
-        ctx.fillRect(10, 360, 300, 30);
+        ctx.fillRect(10, 320, 300, 30);
         
         // 텍스트 색상 설정
         ctx.fillStyle = isRed ? 'red' : 'cyan';
         ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText('특수무기 사용준비 완료(알파벳 B키 발사)', 15, 380);
+        ctx.fillText('특수무기 사용준비 완료(알파벳 B키 발사)', 15, 340);
     }
+
+    // 제작자 정보 표시
+    ctx.fillStyle = 'white';
+    ctx.font = '16px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText('제작/저작권자:Lee.SS.C', canvas.width - 20, canvas.height - 20);
     
     // 보스 체력 표시 개선
     if (bossActive) {
@@ -2490,22 +2473,22 @@ function drawUI() {
         }
     }
     
-    // 파워업 상태 표시
+    // 파워업 상태 표시 (특수무기 다음 줄로 이동)
     if (hasSpreadShot) {
-        ctx.fillStyle = '#ffff00';
-        ctx.fillText('확산탄 활성화', 10, 450);
+        ctx.fillStyle = '#87CEEB'; // 스카이블루로 변경된 확산탄 색상에 맞춰 UI 텍스트 색상도 변경
+        ctx.fillText('확산탄 활성화', 10, 370);
     }
     if (hasShield) {
         ctx.fillStyle = '#0000ff';
-        ctx.fillText('실드 활성화', 10, 480);
+        ctx.fillText('실드 활성화', 10, 400);
     }
     if (damageMultiplier > 1) {
         ctx.fillStyle = '#ff0000';
-        ctx.fillText('데미지 2배', 10, 510);
+        ctx.fillText('데미지 2배', 10, 430);
     }
     if (fireRateMultiplier > 1) {
         ctx.fillStyle = '#ff00ff';
-        ctx.fillText('연사 속도 증가', 10, 540);
+        ctx.fillText('연사 속도 증가', 10, 460);
     }
     
     // 총알 크기 정보 표시
@@ -2514,7 +2497,7 @@ function drawUI() {
         ctx.fillStyle = '#ffff00';
         ctx.font = '16px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText(`총알 크기 증가: ${currentBulletSize}`, 10, 570);
+        ctx.fillText(`총알 크기 증가: ${currentBulletSize}`, 10, 490);
     }
     
 
