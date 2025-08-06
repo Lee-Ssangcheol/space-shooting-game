@@ -2472,35 +2472,6 @@ function drawUI() {
             ctx.fillText(`페이즈 ${currentPhase + 1}`, canvas.width/2, 50);
         }
     }
-    
-    // 파워업 상태 표시 (특수무기 다음 줄로 이동)
-    if (hasSpreadShot) {
-        ctx.fillStyle = '#87CEEB'; // 스카이블루로 변경된 확산탄 색상에 맞춰 UI 텍스트 색상도 변경
-        ctx.fillText('확산탄 활성화', 10, 370);
-    }
-    if (hasShield) {
-        ctx.fillStyle = '#0000ff';
-        ctx.fillText('실드 활성화', 10, 400);
-    }
-    if (damageMultiplier > 1) {
-        ctx.fillStyle = '#ff0000';
-        ctx.fillText('데미지 2배', 10, 430);
-    }
-    if (fireRateMultiplier > 1) {
-        ctx.fillStyle = '#ff00ff';
-        ctx.fillText('연사 속도 증가', 10, 460);
-    }
-    
-    // 총알 크기 정보 표시
-    const currentBulletSize = calculateBulletSize();
-    if (currentBulletSize > baseBulletSize) {
-        ctx.fillStyle = '#ffff00';
-        ctx.font = '16px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText(`총알 크기 증가: ${currentBulletSize}`, 10, 490);
-    }
-    
-
 }
 
 // 게임 시작 이벤트 리스너 수정
