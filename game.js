@@ -8,11 +8,13 @@ const ctx = canvas.getContext('2d');
 const shootSound = document.getElementById('shootSound');
 const explosionSound = document.getElementById('explosionSound');
 const collisionSound = document.getElementById('collisionSound');
+const warningSound = document.getElementById('warningSound');
 
 // 사운드 설정
 shootSound.volume = 0.4;  // 발사음 볼륨 증가
 explosionSound.volume = 0.6;  // 폭발음 볼륨 조정
 collisionSound.volume = 0.5;  // 충돌음 볼륨 조정
+warningSound.volume = 0.6;  // 경고음 볼륨 조정
 
 // 충돌 사운드 재생 시간 제어를 위한 변수 추가
 let lastCollisionTime = 0;
@@ -59,6 +61,9 @@ let collisionCount = 0;   // 충돌 횟수
 let isGameOver = false;   // 게임 오버 상태
 let flashTimer = 0;       // 깜박임 효과 타이머
 let flashDuration = 500;  // 깜박임 지속 시간
+let lifeWarningTimer = 0; // 목숨 경고 깜빡임 타이머
+let lifeWarningDuration = 2000; // 목숨 경고 깜빡임 지속 시간 (2초)
+let lastLifeCount = 5;    // 이전 목숨 수 (변화 감지용)
 let gameOverStartTime = null;  // 게임 오버 시작 시간
 let isSnakePatternActive = false;  // 뱀 패턴 활성화 상태
 let snakePatternTimer = 0;  // 뱀 패턴 타이머
@@ -616,6 +621,7 @@ async function initializeGame() {
         // 1. 충돌 및 게임 상태 초기화
         collisionCount = 0;
         maxLives = 5;  // 최대 목숨 초기화
+        lastLifeCount = 5;  // 이전 목숨 수 초기화
         hasSecondPlane = false;
         secondPlaneTimer = 0;
         
@@ -742,6 +748,7 @@ function restartGame() {
     // 1. 충돌 및 게임 상태 초기화
     collisionCount = 0;
     maxLives = 5;  // 최대 목숨 초기화
+    lastLifeCount = 5;  // 이전 목숨 수 초기화
     hasSecondPlane = false;
     secondPlaneTimer = 0;
     
@@ -1263,6 +1270,23 @@ function handleCollision() {
     collisionCount++;
     flashTimer = flashDuration;
     
+    // 목숨이 줄어들었는지 확인하고 경고음 재생
+    const currentLifeCount = maxLives - collisionCount;
+    if (currentLifeCount < lastLifeCount) {
+        // 경고음 재생
+        warningSound.currentTime = 0;
+        applyGlobalVolume();
+        warningSound.play().catch(error => {
+            console.log('경고음 재생 실패:', error);
+        });
+        
+        // 목숨 경고 깜빡임 타이머 시작
+        lifeWarningTimer = lifeWarningDuration;
+        
+        // 이전 목숨 수 업데이트
+        lastLifeCount = currentLifeCount;
+    }
+    
     if (currentTime - lastCollisionTime >= collisionSoundCooldown) {
         collisionSound.currentTime = 0;
         explosionSound.currentTime = 0;
@@ -1630,6 +1654,11 @@ function gameLoop() {
             ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             flashTimer -= 16;
+        }
+        
+        // 목숨 경고 깜빡임 효과 처리
+        if (lifeWarningTimer > 0) {
+            lifeWarningTimer -= 16;
         }
 
         // 플레이어 이동 처리
@@ -2384,8 +2413,33 @@ function drawUI() {
     ctx.fillText(`일시정지: P키`, 10, 240);
     
     // 남은 목숨 표시 (일시정지 다음 줄로 이동)
-    ctx.fillStyle = 'red';
-    ctx.fillText(`남은 목숨: ${maxLives - collisionCount}`, 10, 270);
+    if (lifeWarningTimer > 0) {
+        // 경고 깜빡임 효과 - 흰 배경에 빨간 텍스트
+        const blinkSpeed = 200; // 깜빡임 속도 (밀리초)
+        const currentTime = Date.now();
+        const isVisible = Math.floor(currentTime / blinkSpeed) % 2 === 0;
+        
+        if (isVisible) {
+            // 흰 배경
+            ctx.fillStyle = 'white';
+            ctx.fillRect(5, 250, 200, 30);
+            
+            // 빨간 텍스트
+            ctx.fillStyle = 'red';
+            ctx.font = 'bold 20px Arial';
+            ctx.fillText(`남은 목숨: ${maxLives - collisionCount}`, 10, 270);
+        } else {
+            // 일반 표시 (빨간 텍스트)
+            ctx.fillStyle = 'red';
+            ctx.font = '20px Arial';
+            ctx.fillText(`남은 목숨: ${maxLives - collisionCount}`, 10, 270);
+        }
+    } else {
+        // 일반 표시 (빨간 텍스트)
+        ctx.fillStyle = 'red';
+        ctx.font = '20px Arial';
+        ctx.fillText(`남은 목숨: ${maxLives - collisionCount}`, 10, 270);
+    }
     
     // 특수 무기 게이지 표시 (남은 목숨 다음 줄로 이동)
     if (!specialWeaponCharged) {
@@ -2605,6 +2659,9 @@ document.addEventListener('keydown', (e) => {
                 restartGame();
             } else {
                 isStartScreen = false;
+                // 게임 시작 시 목숨 관련 변수 초기화
+                lastLifeCount = maxLives;
+                lifeWarningTimer = 0;
             }
             return;
         }
@@ -2648,6 +2705,9 @@ document.addEventListener('keydown', (e) => {
     // 시작 화면에서 Enter를 누르면 게임 시작
     if (isStartScreen && e.code === 'Enter') {
         isStartScreen = false;
+        // 게임 시작 시 목숨 관련 변수 초기화
+        lastLifeCount = maxLives;
+        lifeWarningTimer = 0;
         return;
     }
 });
@@ -3920,6 +3980,7 @@ function applyGlobalVolume() {
     shootSound.volume = vol;
     explosionSound.volume = vol;
     collisionSound.volume = vol;
+    warningSound.volume = vol;
 }
 
 function playExplosionSound(isSnakePattern = false) {
