@@ -8,13 +8,87 @@ const ctx = canvas.getContext('2d');
 const shootSound = document.getElementById('shootSound');
 const explosionSound = document.getElementById('explosionSound');
 const collisionSound = document.getElementById('collisionSound');
-const warningSound = document.getElementById('warningSound');
+
+// 동적으로 오디오 요소 생성 및 경로 자동 감지
+let warningSound = null;
+
+// 경고음 초기화 함수
+function initializeWarningSound() {
+    try {
+        // 기존 경고음이 있다면 제거
+        if (warningSound) {
+            warningSound.remove();
+        }
+        
+        // 새로운 오디오 요소 생성
+        warningSound = document.createElement('audio');
+        warningSound.id = 'warningSound';
+        warningSound.preload = 'auto';
+        
+        // 경로 자동 감지 및 설정
+        const possiblePaths = [
+            'sounds/warning.mp3',
+            './sounds/warning.mp3',
+            '../sounds/warning.mp3',
+            'assets/sounds/warning.mp3',
+            'audio/warning.mp3'
+        ];
+        
+        // 첫 번째 경로로 시도
+        warningSound.src = possiblePaths[0];
+        
+        // 오디오 로드 성공 시
+        warningSound.addEventListener('canplaythrough', () => {
+            console.log('경고음 로드 성공:', warningSound.src);
+            warningSound.volume = 0.6;
+        });
+        
+        // 오디오 로드 실패 시 다른 경로 시도
+        warningSound.addEventListener('error', (e) => {
+            console.warn('경고음 로드 실패:', warningSound.src, e);
+            tryAlternativePaths();
+        });
+        
+        // 문서에 추가
+        document.body.appendChild(warningSound);
+        
+    } catch (error) {
+        console.error('경고음 초기화 실패:', error);
+    }
+}
+
+// 대체 경로 시도 함수
+function tryAlternativePaths() {
+    if (!warningSound) return;
+    
+    const alternativePaths = [
+        'sounds/warning.mp3',
+        './sounds/warning.mp3',
+        '../sounds/warning.mp3',
+        'assets/sounds/warning.mp3',
+        'audio/warning.mp3',
+        'warning.mp3'
+    ];
+    
+    // 현재 경로에서 다음 경로 시도
+    const currentPath = warningSound.src;
+    const currentIndex = alternativePaths.findIndex(path => 
+        currentPath.includes(path) || currentPath.endsWith(path)
+    );
+    
+    if (currentIndex >= 0 && currentIndex < alternativePaths.length - 1) {
+        const nextPath = alternativePaths[currentIndex + 1];
+        console.log('대체 경로 시도:', nextPath);
+        warningSound.src = nextPath;
+    } else {
+        console.error('모든 경로에서 경고음 로드 실패');
+    }
+}
 
 // 사운드 설정
 shootSound.volume = 0.4;  // 발사음 볼륨 증가
 explosionSound.volume = 0.6;  // 폭발음 볼륨 조정
 collisionSound.volume = 0.5;  // 충돌음 볼륨 조정
-warningSound.volume = 0.6;  // 경고음 볼륨 조정
 
 // 충돌 사운드 재생 시간 제어를 위한 변수 추가
 let lastCollisionTime = 0;
@@ -827,9 +901,12 @@ function restartGame() {
     isStartScreen = false;
     isPaused = false;
     
-    // 13. 사운드 관련 상태 초기화
-    lastCollisionTime = 0;
-    lastExplosionTime = 0;
+            // 13. 사운드 관련 상태 초기화
+        lastCollisionTime = 0;
+        lastExplosionTime = 0;
+        
+        // 14. 경고음 초기화
+        initializeWarningSound();
     
     // 14. 패턴 추적 시스템 초기화
     levelBossPatterns.usedPatterns = [];
@@ -1273,12 +1350,17 @@ function handleCollision() {
     // 목숨이 줄어들었는지 확인하고 경고음 재생
     const currentLifeCount = maxLives - collisionCount;
     if (currentLifeCount < lastLifeCount) {
-        // 경고음 재생
-        warningSound.currentTime = 0;
-        applyGlobalVolume();
-        warningSound.play().catch(error => {
-            console.log('경고음 재생 실패:', error);
-        });
+        // 경고음이 존재할 때만 재생
+        if (warningSound) {
+            warningSound.currentTime = 0;
+            applyGlobalVolume();
+            warningSound.play().catch(error => {
+                console.log('경고음 재생 실패:', error);
+            });
+        } else {
+            console.warn('경고음이 초기화되지 않았습니다. 경고음 초기화를 시도합니다.');
+            initializeWarningSound();
+        }
         
         // 목숨 경고 깜빡임 타이머 시작
         lifeWarningTimer = lifeWarningDuration;
@@ -2662,6 +2744,8 @@ document.addEventListener('keydown', (e) => {
                 // 게임 시작 시 목숨 관련 변수 초기화
                 lastLifeCount = maxLives;
                 lifeWarningTimer = 0;
+                // 경고음 초기화
+                initializeWarningSound();
             }
             return;
         }
@@ -2708,6 +2792,8 @@ document.addEventListener('keydown', (e) => {
         // 게임 시작 시 목숨 관련 변수 초기화
         lastLifeCount = maxLives;
         lifeWarningTimer = 0;
+        // 경고음 초기화
+        initializeWarningSound();
         return;
     }
 });
@@ -3980,7 +4066,11 @@ function applyGlobalVolume() {
     shootSound.volume = vol;
     explosionSound.volume = vol;
     collisionSound.volume = vol;
-    warningSound.volume = vol;
+    
+    // 경고음이 존재할 때만 볼륨 설정
+    if (warningSound) {
+        warningSound.volume = vol;
+    }
 }
 
 function playExplosionSound(isSnakePattern = false) {
@@ -4325,7 +4415,10 @@ function restartGame() {
     lastCollisionTime = 0;
     lastExplosionTime = 0;
     
-    // 14. 패턴 추적 시스템 초기화
+    // 14. 경고음 초기화
+    initializeWarningSound();
+    
+    // 15. 패턴 추적 시스템 초기화
     levelBossPatterns.usedPatterns = [];
     levelBossPatterns.currentLevelPattern = null;
     
