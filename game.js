@@ -9,80 +9,100 @@ const shootSound = document.getElementById('shootSound');
 const explosionSound = document.getElementById('explosionSound');
 const collisionSound = document.getElementById('collisionSound');
 
-// 동적으로 오디오 요소 생성 및 경로 자동 감지
+// 동적으로 오디오 요소 생성 및 경로 자동 감지 (경고음 매니저)
 let warningSound = null;
-
-// 경고음 초기화 함수
-function initializeWarningSound() {
-    try {
-        // 기존 경고음이 있다면 제거
-        if (warningSound) {
-            warningSound.remove();
-        }
-        
-        // 새로운 오디오 요소 생성
-        warningSound = document.createElement('audio');
-        warningSound.id = 'warningSound';
-        warningSound.preload = 'auto';
-        
-        // 경로 자동 감지 및 설정
-        const possiblePaths = [
-            'sounds/warning.mp3',
-            './sounds/warning.mp3',
-            '../sounds/warning.mp3',
-            'assets/sounds/warning.mp3',
-            'audio/warning.mp3'
-        ];
-        
-        // 첫 번째 경로로 시도
-        warningSound.src = possiblePaths[0];
-        
-        // 오디오 로드 성공 시
-        warningSound.addEventListener('canplaythrough', () => {
-            console.log('경고음 로드 성공:', warningSound.src);
-            warningSound.volume = 0.6;
-        });
-        
-        // 오디오 로드 실패 시 다른 경로 시도
-        warningSound.addEventListener('error', (e) => {
-            console.warn('경고음 로드 실패:', warningSound.src, e);
-            tryAlternativePaths();
-        });
-        
-        // 문서에 추가
-        document.body.appendChild(warningSound);
-        
-    } catch (error) {
-        console.error('경고음 초기화 실패:', error);
-    }
-}
-
-// 대체 경로 시도 함수
-function tryAlternativePaths() {
-    if (!warningSound) return;
-    
-    const alternativePaths = [
+const WarningSoundManager = {
+    paths: [
         'sounds/warning.mp3',
         './sounds/warning.mp3',
         '../sounds/warning.mp3',
         'assets/sounds/warning.mp3',
         'audio/warning.mp3',
         'warning.mp3'
-    ];
-    
-    // 현재 경로에서 다음 경로 시도
-    const currentPath = warningSound.src;
-    const currentIndex = alternativePaths.findIndex(path => 
-        currentPath.includes(path) || currentPath.endsWith(path)
-    );
-    
-    if (currentIndex >= 0 && currentIndex < alternativePaths.length - 1) {
-        const nextPath = alternativePaths[currentIndex + 1];
-        console.log('대체 경로 시도:', nextPath);
-        warningSound.src = nextPath;
-    } else {
-        console.error('모든 경로에서 경고음 로드 실패');
+    ],
+    idx: 0,
+    ready: false,
+    lastPlayMs: 0,
+    cooldownMs: 250,
+    init() {
+        this.ready = false;
+        this.idx = 0;
+        this._createAudio();
+        this._tryCurrentPath();
+    },
+    _createAudio() {
+        if (warningSound) {
+            try { warningSound.remove(); } catch (e) {}
+        }
+        warningSound = document.createElement('audio');
+        warningSound.id = 'warningSound';
+        warningSound.preload = 'auto';
+        document.body.appendChild(warningSound);
+        // 공통 핸들러 등록
+        warningSound.addEventListener('canplaythrough', () => {
+            this.ready = true;
+            console.log('경고음 로드 성공:', warningSound.src);
+        });
+        warningSound.addEventListener('error', (e) => {
+            console.warn('경고음 로드 실패:', warningSound.src, e);
+            this._nextPath();
+        });
+    },
+    _tryCurrentPath() {
+        if (this.idx >= this.paths.length) {
+            console.error('모든 경고음 경로 로드 실패');
+            return;
+        }
+        const path = this.paths[this.idx];
+        warningSound.src = path;
+        try { warningSound.load(); } catch (e) {}
+    },
+    _nextPath() {
+        this.idx += 1;
+        this.ready = false;
+        this._tryCurrentPath();
+    },
+    play() {
+        const now = Date.now();
+        if (now - this.lastPlayMs < this.cooldownMs) return;
+        if (!warningSound) {
+            this.init();
+            return;
+        }
+        if (isMuted || globalVolume <= 0) return;
+        applyGlobalVolume();
+        const doPlay = () => {
+            try { warningSound.currentTime = 0; } catch (e) {}
+            const p = warningSound.play();
+            if (p && typeof p.then === 'function') {
+                p.then(() => { this.lastPlayMs = Date.now(); }).catch(err => {
+                    console.warn('경고음 재생 실패:', err);
+                });
+            } else {
+                this.lastPlayMs = Date.now();
+            }
+        };
+        if (warningSound.readyState >= 2) {
+            doPlay();
+        } else {
+            const onReady = () => {
+                warningSound.removeEventListener('canplay', onReady);
+                warningSound.removeEventListener('canplaythrough', onReady);
+                doPlay();
+            };
+            warningSound.addEventListener('canplay', onReady, { once: true });
+            warningSound.addEventListener('canplaythrough', onReady, { once: true });
+            try { warningSound.load(); } catch (e) {}
+        }
     }
+};
+
+function initializeWarningSound() {
+    WarningSoundManager.init();
+}
+
+function playWarningSound() {
+    WarningSoundManager.play();
 }
 
 // 사운드 설정
@@ -138,6 +158,7 @@ let flashDuration = 500;  // 깜박임 지속 시간
 let lifeWarningTimer = 0; // 목숨 경고 깜빡임 타이머
 let lifeWarningDuration = 2000; // 목숨 경고 깜빡임 지속 시간 (2초)
 let lastLifeCount = 5;    // 이전 목숨 수 (변화 감지용)
+let suppressCollisionSfxUntil = 0; // 경고음 우선 재생을 위한 충돌음 일시 억제
 let gameOverStartTime = null;  // 게임 오버 시작 시간
 let isSnakePatternActive = false;  // 뱀 패턴 활성화 상태
 let snakePatternTimer = 0;  // 뱀 패턴 타이머
@@ -775,6 +796,8 @@ async function initializeGame() {
         // 12. 사운드 관련 상태 초기화
         lastCollisionTime = 0;
         lastExplosionTime = 0;
+        suppressCollisionSfxUntil = 0;
+        suppressCollisionSfxUntil = 0;
         
         // 13. 패턴 추적 시스템 초기화
         levelBossPatterns.usedPatterns = [];
@@ -904,6 +927,7 @@ function restartGame() {
             // 13. 사운드 관련 상태 초기화
         lastCollisionTime = 0;
         lastExplosionTime = 0;
+        suppressCollisionSfxUntil = 0;
         
         // 14. 경고음 초기화
         initializeWarningSound();
@@ -1347,37 +1371,15 @@ function handleCollision() {
     collisionCount++;
     flashTimer = flashDuration;
     
-    // 목숨이 줄어들었는지 확인하고 경고음 재생
+    // 플레이어 충돌 시에는 항상 경고음을 재생하고 UI 경고 상태를 시작
     const currentLifeCount = maxLives - collisionCount;
-    if (currentLifeCount < lastLifeCount) {
-        // 경고음이 존재할 때만 재생
-        if (warningSound) {
-            warningSound.currentTime = 0;
-            applyGlobalVolume();
-            warningSound.play().catch(error => {
-                console.log('경고음 재생 실패:', error);
-            });
-        } else {
-            console.warn('경고음이 초기화되지 않았습니다. 경고음 초기화를 시도합니다.');
-            initializeWarningSound();
-        }
-        
-        // 목숨 경고 깜빡임 타이머 시작
-        lifeWarningTimer = lifeWarningDuration;
-        
-        // 이전 목숨 수 업데이트
-        lastLifeCount = currentLifeCount;
-    }
+    playWarningSound();
+    suppressCollisionSfxUntil = Date.now() + 300; // 경고음이 묻히지 않도록 단기 억제
+    lifeWarningTimer = lifeWarningDuration;
+    lastLifeCount = currentLifeCount;
     
-    if (currentTime - lastCollisionTime >= collisionSoundCooldown) {
-        collisionSound.currentTime = 0;
-        explosionSound.currentTime = 0;
-        applyGlobalVolume();
-        explosionSound.play().catch(error => {
-            console.log('오디오 재생 실패:', error);
-        });
-        lastCollisionTime = currentTime;
-    }
+    // 플레이어 목숨이 감소하는 모든 충돌 상황에서는 경고음만 재생하고 다른 충돌/폭발음은 재생하지 않음
+    lastCollisionTime = currentTime;
     
     if (collisionCount >= maxLives) {  // maxLives 사용
         handleGameOver();
@@ -1418,12 +1420,7 @@ function handleCollision() {
             }
         }
         
-        // 게임 오버 시 폭발음 재생
-        applyGlobalVolume();
-        explosionSound.currentTime = 0;
-        explosionSound.play().catch(error => {
-            console.log('오디오 재생 실패:', error);
-        });
+        // 게임 오버 시에도 별도의 충돌/폭발음은 재생하지 않음 (경고음만 유지)
     }
 }
 
