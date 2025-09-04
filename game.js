@@ -1420,7 +1420,24 @@ function handleCollision() {
             }
         }
         
-        // 게임 오버 시에도 별도의 충돌/폭발음은 재생하지 않음 (경고음만 유지)
+        // 게임 오버(마지막 목숨 소진) 시에만 폭발음 재생
+        try {
+            // 경고음 억제 해제 후 폭발음 재생
+            suppressCollisionSfxUntil = 0;
+            // 경고음이 재생 중이면 정지하여 폭발음을 또렷이
+            if (warningSound && !warningSound.paused) {
+                try { warningSound.pause(); warningSound.currentTime = 0; } catch (e) {}
+            }
+            // 폭발음은 충분히 크게 재생 (전역볼륨이 낮아도 최소 0.8 보장)
+            const baseVol = isMuted ? 0 : Math.min(1, Math.max(0, globalVolume));
+            const finalVol = isMuted ? 0 : Math.max(0.8, baseVol);
+            explosionSound.volume = finalVol;
+            explosionSound.playbackRate = 1.0;
+            explosionSound.currentTime = 0;
+            explosionSound.play().catch(error => {
+                console.log('오디오 재생 실패:', error);
+            });
+        } catch (e) {}
     }
 }
 
@@ -4072,7 +4089,7 @@ function applyGlobalVolume() {
 
 function playExplosionSound(isSnakePattern = false) {
     const currentTime = Date.now();
-    let volumeMultiplier = 1.0;
+    let volumeMultiplier = 2.0; //플레이어 폭발음 볼윰 증가
     
     if (isSnakePattern) {
         volumeMultiplier = SNAKE_EXPLOSION_VOLUME_MULTIPLIER;
