@@ -3882,7 +3882,7 @@ function drawStartScreen() {
     ctx.fillText('Controls:', 50, canvas.height - 150);
     ctx.fillText('↑↓←→ : Move', 50, canvas.height - 120);
     ctx.fillText('SPACE : Shoot', 50, canvas.height - 90);
-    ctx.fillText('V : Special Weapon', 50, canvas.height - 60);
+    ctx.fillText('B : Special Weapon', 50, canvas.height - 60);
     ctx.fillText('P : Pause', 50, canvas.height - 30);
 }
 
