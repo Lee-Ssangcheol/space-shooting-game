@@ -2540,28 +2540,53 @@ function drawUI() {
     }
     
     // 특수 무기 게이지 및 개수 표시
-    if (specialWeaponCount > 0) {
-        // 깜빡이는 효과를 위한 시간 계산
-        const blinkSpeed = 500; // 깜빡임 속도 (밀리초)
-        const currentTime = Date.now();
-        const isRed = Math.floor(currentTime / blinkSpeed) % 2 === 0;
-        
-        // 배경색 설정 (게이지 바)
+    const chargePercent = Math.floor((specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE) * 100);
+    const hasSpecialWeapon = specialWeaponCount > 0;
+    const displayCount = hasSpecialWeapon ? specialWeaponCount : 0;
+    
+    // 깜빡이는 효과를 위한 시간 계산 (특수무기가 있을 때만)
+    const blinkSpeed = 500; // 깜빡임 속도 (밀리초)
+    const currentTime = Date.now();
+    const isRed = hasSpecialWeapon && Math.floor(currentTime / blinkSpeed) % 2 === 0;
+    
+    // 배경색 설정 (게이지 바) - 원상복구
+    if (hasSpecialWeapon) {
         ctx.fillStyle = isRed ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 0, 255, 0.3)';
-        ctx.fillRect(10, 300, 200, 20);
-        
-        // 테두리 효과
+    } else {
+        ctx.fillStyle = 'rgba(0, 0, 255, 0.3)';  // 원래 색상 복구
+    }
+    ctx.fillRect(10, 300, 200, 20);
+    
+    // 게이지 바 - 청록색
+    if (hasSpecialWeapon) {
+        ctx.fillStyle = isRed ? 'rgba(255, 0, 0, 0.8)' : 'rgba(0, 255, 255, 0.8)';  // 청록색
+    } else {
+        ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';  // 청록색 게이지
+    }
+    ctx.fillRect(10, 300, (specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE) * 200, 20);
+    
+    // 테두리 효과 - 원상복구
+    if (hasSpecialWeapon) {
         ctx.strokeStyle = isRed ? 'red' : 'cyan';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(10, 300, 200, 20);
-        
-        // 게이지 바 위에 텍스트 표시 (개수 표시)
+    } else {
+        ctx.strokeStyle = 'cyan';  // 원래 색상 복구
+    }
+    ctx.lineWidth = 2;
+    ctx.strokeRect(10, 300, 200, 20);
+    
+    // 게이지 바 위에 텍스트 표시 (충전률과 보유 개수) - 원상복구
+    if (hasSpecialWeapon) {
         ctx.fillStyle = isRed ? 'red' : 'cyan';
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'center';
-        const countText = `특수 무기 : ${specialWeaponCount}개`;
-        ctx.fillText(countText, 110, 315);
-        
+    } else {
+        ctx.fillStyle = 'cyan';  // 원래 색상 복구
+    }
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    const displayText = `특수무기: ${chargePercent}%(보유:${displayCount}개)`;
+    ctx.fillText(displayText, 110, 315);
+    
+    // 준비 완료 메시지 (특수무기가 있을 때만)
+    if (hasSpecialWeapon) {
         // 준비 완료 메시지 배경
         ctx.fillStyle = isRed ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 0, 255, 0.2)';
         ctx.fillRect(10, 320, 300, 30);
@@ -2570,22 +2595,7 @@ function drawUI() {
         ctx.fillStyle = isRed ? 'red' : 'cyan';
         ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText('특수무기 사용준비 완료(알파벳 B키 발사)', 15, 340);
-    } else {
-        // 게이지 바 배경
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.fillRect(10, 300, 200, 20);
-        
-        // 게이지 바
-        ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
-        ctx.fillRect(10, 300, (specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE) * 200, 20);
-        
-        // 게이지 바 위에 텍스트 표시
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'center';
-        const percentText = `특수 무기 : ${Math.floor((specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE) * 100)}%`;
-        ctx.fillText(percentText, 110, 315);
+        ctx.fillText('특수무기 발사(알파벳 "B"키 클릭)', 15, 340);
     }
 
     // 제작자 정보 표시
