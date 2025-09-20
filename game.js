@@ -883,6 +883,7 @@ function restartGame() {
     // 6. 특수무기 관련 상태 초기화
     specialWeaponCharged = false;
     specialWeaponCharge = 0;
+    specialWeaponCount = 0;
     
     // 7. 보스 관련 상태 완전 초기화
     bossActive = false;
@@ -4401,6 +4402,7 @@ function restartGame() {
     // 6. 특수무기 관련 상태 초기화
     specialWeaponCharged = false;
     specialWeaponCharge = 0;
+    specialWeaponCount = 0;
     
     // 7. 보스 관련 상태 완전 초기화
     bossActive = false;
