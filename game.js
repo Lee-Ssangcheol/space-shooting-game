@@ -177,6 +177,7 @@ let bossHealth = 0;
 let bossPattern = 0;
 let specialWeaponCharged = false;
 let specialWeaponCharge = 0;
+let specialWeaponCount = 0;  // 특수무기 개수
 const SPECIAL_WEAPON_MAX_CHARGE = 5000;  // 특수무기 최대 충전량을 5000으로 설정
 
 
@@ -787,6 +788,7 @@ async function initializeGame() {
         // 10. 특수무기 관련 상태 초기화
         specialWeaponCharged = false;
         specialWeaponCharge = 0;
+        specialWeaponCount = 0;
         
         // 11. 키보드 입력 상태 초기화
         Object.keys(keys).forEach(key => {
@@ -2421,7 +2423,7 @@ function handleBulletFiring() {
 
 // 특수 무기 처리 함수 수정
 function handleSpecialWeapon() {
-    if (specialWeaponCharged && keys.KeyB) {  // KeyB를 KeyB로 변경
+    if (specialWeaponCount > 0 && keys.KeyB) {  // 특수무기 개수가 0보다 클 때 사용 가능
         // 특수 무기 발사 - 더 많은 총알과 강력한 효과
         for (let i = 0; i < 360; i += 5) { // 각도 간격을 10도에서 5도로 감소
             const angle = (i * Math.PI) / 180;
@@ -2458,8 +2460,8 @@ function handleSpecialWeapon() {
             }
         }
         
-        specialWeaponCharged = false;
-        specialWeaponCharge = 0;
+        specialWeaponCount--;  // 특수무기 개수 감소
+        specialWeaponCharged = specialWeaponCount > 0;
         
         // 특수 무기 발사 효과음
         applyGlobalVolume();
@@ -2537,23 +2539,8 @@ function drawUI() {
         ctx.fillText(`남은 목숨: ${maxLives - collisionCount}`, 10, 270);
     }
     
-    // 특수 무기 게이지 표시 (남은 목숨 다음 줄로 이동)
-    if (!specialWeaponCharged) {
-        // 게이지 바 배경
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.fillRect(10, 300, 200, 20);
-        
-        // 게이지 바
-        ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
-        ctx.fillRect(10, 300, (specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE) * 200, 20);
-        
-        // 게이지 바 위에 텍스트 표시
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'center';
-        const percentText = `특수 무기 : ${Math.floor((specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE) * 100)}%`;
-        ctx.fillText(percentText, 110, 315);
-    } else {
+    // 특수 무기 게이지 및 개수 표시
+    if (specialWeaponCount > 0) {
         // 깜빡이는 효과를 위한 시간 계산
         const blinkSpeed = 500; // 깜빡임 속도 (밀리초)
         const currentTime = Date.now();
@@ -2568,12 +2555,12 @@ function drawUI() {
         ctx.lineWidth = 2;
         ctx.strokeRect(10, 300, 200, 20);
         
-        // 게이지 바 위에 텍스트 표시
+        // 게이지 바 위에 텍스트 표시 (개수 표시)
         ctx.fillStyle = isRed ? 'red' : 'cyan';
         ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'center';
-        const percentText = `특수 무기 : ${Math.floor((specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE) * 100)}%`;
-        ctx.fillText(percentText, 110, 315);
+        const countText = `특수 무기 : ${specialWeaponCount}개`;
+        ctx.fillText(countText, 110, 315);
         
         // 준비 완료 메시지 배경
         ctx.fillStyle = isRed ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 0, 255, 0.2)';
@@ -2584,6 +2571,21 @@ function drawUI() {
         ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'left';
         ctx.fillText('특수무기 사용준비 완료(알파벳 B키 발사)', 15, 340);
+    } else {
+        // 게이지 바 배경
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.fillRect(10, 300, 200, 20);
+        
+        // 게이지 바
+        ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
+        ctx.fillRect(10, 300, (specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE) * 200, 20);
+        
+        // 게이지 바 위에 텍스트 표시
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        const percentText = `특수 무기 : ${Math.floor((specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE) * 100)}%`;
+        ctx.fillText(percentText, 110, 315);
     }
 
     // 제작자 정보 표시
@@ -2866,12 +2868,11 @@ function updateScore(points) {
     levelScore += points;
     
     // 특수 무기 게이지 증가
-    if (!specialWeaponCharged) {
-        specialWeaponCharge += points;
-        if (specialWeaponCharge >= SPECIAL_WEAPON_MAX_CHARGE) {
-            specialWeaponCharged = true;
-            specialWeaponCharge = SPECIAL_WEAPON_MAX_CHARGE;
-        }
+    specialWeaponCharge += points;
+    if (specialWeaponCharge >= SPECIAL_WEAPON_MAX_CHARGE) {
+        specialWeaponCount += Math.floor(specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE);
+        specialWeaponCharge = specialWeaponCharge % SPECIAL_WEAPON_MAX_CHARGE;
+        specialWeaponCharged = specialWeaponCount > 0;
     }
     
     // 최고 점수 즉시 업데이트 및 저장
@@ -4269,6 +4270,7 @@ async function initializeGame() {
         // 10. 특수무기 관련 상태 초기화
         specialWeaponCharged = false;
         specialWeaponCharge = 0;
+        specialWeaponCount = 0;
         
         // 11. 키보드 입력 상태 초기화
         Object.keys(keys).forEach(key => {
