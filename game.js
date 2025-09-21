@@ -207,6 +207,42 @@ const BOSS_PATTERNS = {
     CHAOS_SPREAD: 'chaos_spread'           // 카오스 확산 패턴
 };
 
+// 보스 패턴별 색상 상수 추가 (실제 패턴 값과 일치하도록 수정)
+const BOSS_PATTERN_COLORS = {
+    'basic': '#FFFFFF',           // 흰색
+    'circle_shot': '#FF69B4',     // 핫핑크
+    'cross_shot': '#00FFFF',      // 시안
+    'spiral_shot': '#FF8C00',     // 다크오렌지
+    'wave_shot': '#90EE90',       // 라이트그린
+    'diamond_shot': '#FF0000',    // 빨간색
+    'random_spread': '#FFFF00',   // 노란색
+    'double_spiral': '#00FF7F',   // 청녹색
+    'triple_wave': '#32CD32',     // 라임그린
+    'targeted_shot': '#FF4500',   // 오렌지레드
+    'burst_shot': '#FFD700',      // 골드
+    // 새로운 패턴들 색상 (기본 패턴과 동일한 색상 사용)
+    'spread_circle': '#FF69B4',   // 핫핑크
+    'spread_cross': '#00FFFF',    // 시안
+    'spread_spiral': '#FF8C00',   // 다크오렌지
+    'spread_wave': '#90EE90',     // 라이트그린
+    'spread_diamond': '#FF0000',  // 빨간색
+    'spread_burst': '#FFD700',    // 골드
+    'spread_targeted': '#FF4500', // 오렌지레드
+    'spread_random': '#FFFF00',   // 노란색
+    'mega_spread': '#FF0000',     // 빨간색
+    'chaos_spread': '#FF0000'     // 빨간색
+};
+
+// 헥스 색상을 RGB로 변환하는 함수
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
+
 // 키보드 입력 상태
 const keys = {
     ArrowLeft: false,
@@ -2913,10 +2949,14 @@ function handleBullets() {
             ctx.translate(bullet.x, bullet.y);
             ctx.rotate(bullet.rotation);
             
+            // 패턴별 색상 가져오기
+            const patternColor = BOSS_PATTERN_COLORS[bullet.pattern] || '#FF0000'; // 기본값은 빨간색
+            const rgb = hexToRgb(patternColor);
+            
             // 총알 본체
             const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, bullet.width/2);
-            gradient.addColorStop(0, 'rgba(255, 0, 0, 0.8)');
-            gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+            gradient.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.8)`);
+            gradient.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0)`);
             ctx.fillStyle = gradient;
             ctx.beginPath();
             ctx.arc(0, 0, bullet.width/2, 0, Math.PI * 2);
@@ -2925,7 +2965,7 @@ function handleBullets() {
             // 총알 꼬리
             bullet.trail.forEach((pos, index) => {
                 const alpha = 1 - (index / bullet.trail.length);
-                ctx.fillStyle = `rgba(255, 0, 0, ${alpha * 0.5})`;
+                ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha * 0.5})`;
                 ctx.beginPath();
                 ctx.arc(pos.x - bullet.x, pos.y - bullet.y, 
                         bullet.width/2 * (1 - index/bullet.trail.length), 0, Math.PI * 2);
@@ -2934,8 +2974,8 @@ function handleBullets() {
             
             // 총알 주변에 빛나는 효과
             const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, bullet.width);
-            glowGradient.addColorStop(0, 'rgba(255, 0, 0, 0.3)');
-            glowGradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+            glowGradient.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.3)`);
+            glowGradient.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0)`);
             ctx.fillStyle = glowGradient;
             ctx.beginPath();
             ctx.arc(0, 0, bullet.width, 0, Math.PI * 2);
@@ -3347,7 +3387,7 @@ function executeBossPattern(boss, pattern, currentTime) {
             // 기본 패턴: 직선 발사 (느린 속도)
             if (currentTime - boss.lastShot >= 1500) {
                 boss.lastShot = currentTime;
-                createBossBullet(boss, Math.PI / 2, false);  // 일반 폭탄
+                createBossBullet(boss, Math.PI / 2, pattern);  // 일반 폭탄
             }
             break;
             
@@ -3355,7 +3395,7 @@ function executeBossPattern(boss, pattern, currentTime) {
             if (currentTime - boss.lastShot >= 500) {  // 0.5초마다 발사
                 for (let i = 0; i < 8; i++) {
                     const angle = (Math.PI * 2 / 8) * i;
-                    createBossBullet(boss, angle);
+                    createBossBullet(boss, angle, pattern);
                 }
                 boss.lastShot = currentTime;
             }
@@ -3365,7 +3405,7 @@ function executeBossPattern(boss, pattern, currentTime) {
             if (currentTime - boss.lastShot >= 800) {  // 0.8초마다 발사
                 for (let i = 0; i < 4; i++) {
                     const angle = (Math.PI / 2) * i;
-                    createBossBullet(boss, angle);
+                    createBossBullet(boss, angle, pattern);
                 }
                 boss.lastShot = currentTime;
             }
@@ -3373,7 +3413,7 @@ function executeBossPattern(boss, pattern, currentTime) {
             
         case BOSS_PATTERNS.SPIRAL_SHOT:
             if (currentTime - boss.lastShot >= 200) {  // 0.2초마다 발사
-                createBossBullet(boss, boss.patternAngle);
+                createBossBullet(boss, boss.patternAngle, pattern);
                 boss.patternAngle += Math.PI / 8;  // 22.5도씩 회전
                 boss.lastShot = currentTime;
                 
@@ -3387,7 +3427,7 @@ function executeBossPattern(boss, pattern, currentTime) {
         case BOSS_PATTERNS.WAVE_SHOT:
             if (currentTime - boss.lastShot >= 300) {  // 0.3초마다 발사
                 const waveAngle = Math.sin(boss.patternAngle) * (Math.PI / 4);  // -45도 ~ 45도 사이
-                createBossBullet(boss, Math.PI / 2 + waveAngle);  // 아래쪽으로 파도형 발사
+                createBossBullet(boss, Math.PI / 2 + waveAngle, pattern);  // 아래쪽으로 파도형 발사
                 boss.patternAngle += 0.2;
                 boss.lastShot = currentTime;
                 
@@ -3402,7 +3442,7 @@ function executeBossPattern(boss, pattern, currentTime) {
             if (currentTime - boss.lastShot >= 600) {  // 0.6초마다 발사
                 const angles = [0, Math.PI/2, Math.PI, Math.PI*3/2];  // 상, 우, 하, 좌
                 angles.forEach(angle => {
-                    createBossBullet(boss, angle);
+                    createBossBullet(boss, angle, pattern);
                 });
                 boss.lastShot = currentTime;
             }
@@ -3412,7 +3452,7 @@ function executeBossPattern(boss, pattern, currentTime) {
             if (currentTime - boss.lastShot >= 400) {  // 0.4초마다 발사
                 for (let i = 0; i < 5; i++) {
                     const randomAngle = Math.random() * Math.PI * 2;  // 0~360도 랜덤
-                    createBossBullet(boss, randomAngle);
+                    createBossBullet(boss, randomAngle, pattern);
                 }
                 boss.lastShot = currentTime;
             }
@@ -3421,8 +3461,8 @@ function executeBossPattern(boss, pattern, currentTime) {
         case BOSS_PATTERNS.DOUBLE_SPIRAL:
             if (currentTime - boss.lastShot >= 150) {  // 0.15초마다 발사
                 // 두 개의 나선형 패턴을 동시에 발사
-                createBossBullet(boss, boss.patternAngle);
-                createBossBullet(boss, boss.patternAngle + Math.PI);  // 반대 방향
+                createBossBullet(boss, boss.patternAngle, pattern);
+                createBossBullet(boss, boss.patternAngle + Math.PI, pattern);  // 반대 방향
                 boss.patternAngle += Math.PI / 12;  // 15도씩 회전
                 boss.lastShot = currentTime;
                 
@@ -3438,7 +3478,7 @@ function executeBossPattern(boss, pattern, currentTime) {
                 // 세 개의 파도형 패턴을 동시에 발사
                 for (let i = 0; i < 3; i++) {
                     const waveAngle = Math.sin(boss.patternAngle + (i * Math.PI * 2 / 3)) * (Math.PI / 3);
-                    createBossBullet(boss, Math.PI / 2 + waveAngle);
+                    createBossBullet(boss, Math.PI / 2 + waveAngle, pattern);
                 }
                 boss.patternAngle += 0.3;
                 boss.lastShot = currentTime;
@@ -3456,7 +3496,7 @@ function executeBossPattern(boss, pattern, currentTime) {
                 const angleToPlayer = Math.atan2(player.y - boss.y, player.x - boss.x);
                 for (let i = -1; i <= 1; i++) {
                     const spreadAngle = angleToPlayer + (i * Math.PI / 12);  // ±15도 스프레드
-                    createBossBullet(boss, spreadAngle);
+                    createBossBullet(boss, spreadAngle, pattern);
                 }
                 boss.lastShot = currentTime;
             }
@@ -3467,10 +3507,10 @@ function executeBossPattern(boss, pattern, currentTime) {
                 // 8방향으로 동시에 발사
                 for (let i = 0; i < 8; i++) {
                     const angle = (Math.PI * 2 / 8) * i;
-                    createBossBullet(boss, angle);
+                    createBossBullet(boss, angle, pattern);
                 }
                 // 중앙에 추가 발사
-                createBossBullet(boss, Math.PI / 2);
+                createBossBullet(boss, Math.PI / 2, pattern);
                 boss.lastShot = currentTime;
             }
             break;
@@ -3483,7 +3523,7 @@ function executeBossPattern(boss, pattern, currentTime) {
                     const baseAngle = (Math.PI * 2 / 12) * i;
                     for (let j = 0; j < 3; j++) {
                         const spreadAngle = baseAngle + (j - 1) * 0.2; // ±0.2 라디안 확산
-                        createBossBullet(boss, spreadAngle);
+                        createBossBullet(boss, spreadAngle, pattern);
                     }
                 }
                 boss.lastShot = currentTime;
@@ -3497,7 +3537,7 @@ function executeBossPattern(boss, pattern, currentTime) {
                 crossAngles.forEach(angle => {
                     for (let i = 0; i < 5; i++) {
                         const spreadAngle = angle + (i - 2) * 0.15; // ±0.3 라디안 확산
-                        createBossBullet(boss, spreadAngle);
+                        createBossBullet(boss, spreadAngle, pattern);
                     }
                 });
                 boss.lastShot = currentTime;
@@ -3511,7 +3551,7 @@ function executeBossPattern(boss, pattern, currentTime) {
                     const baseAngle = boss.patternAngle + (i * Math.PI * 2 / 3);
                     for (let j = 0; j < 3; j++) {
                         const spreadAngle = baseAngle + (j - 1) * 0.2;
-                        createBossBullet(boss, spreadAngle);
+                        createBossBullet(boss, spreadAngle, pattern);
                     }
                 }
                 boss.patternAngle += Math.PI / 8;  // 22.5도씩 회전
@@ -3527,7 +3567,7 @@ function executeBossPattern(boss, pattern, currentTime) {
                     const baseAngle = Math.PI / 2 + Math.sin(boss.patternAngle + i * 0.5) * 0.8;
                     for (let j = 0; j < 3; j++) {
                         const spreadAngle = baseAngle + (j - 1) * 0.25;
-                        createBossBullet(boss, spreadAngle);
+                        createBossBullet(boss, spreadAngle, pattern);
                     }
                 }
                 boss.patternAngle += Math.PI / 12;
@@ -3542,7 +3582,7 @@ function executeBossPattern(boss, pattern, currentTime) {
                 diamondAngles.forEach(angle => {
                     for (let i = 0; i < 4; i++) {
                         const spreadAngle = angle + (i - 1.5) * 0.2;
-                        createBossBullet(boss, spreadAngle);
+                        createBossBullet(boss, spreadAngle, pattern);
                     }
                 });
                 boss.lastShot = currentTime;
@@ -3556,7 +3596,7 @@ function executeBossPattern(boss, pattern, currentTime) {
                     const baseAngle = (Math.PI * 2 / 16) * i;
                     for (let j = 0; j < 2; j++) {
                         const spreadAngle = baseAngle + (j - 0.5) * 0.3;
-                        createBossBullet(boss, spreadAngle);
+                        createBossBullet(boss, spreadAngle, pattern);
                     }
                 }
                 boss.lastShot = currentTime;
@@ -3582,7 +3622,7 @@ function executeBossPattern(boss, pattern, currentTime) {
                     const randomAngle = Math.random() * Math.PI * 2;
                     for (let j = 0; j < 2; j++) {
                         const spreadAngle = randomAngle + (j - 0.5) * 0.4;
-                        createBossBullet(boss, spreadAngle);
+                        createBossBullet(boss, spreadAngle, pattern);
                     }
                 }
                 boss.lastShot = currentTime;
@@ -3596,7 +3636,7 @@ function executeBossPattern(boss, pattern, currentTime) {
                     const baseAngle = (Math.PI * 2 / 24) * i;
                     for (let j = 0; j < 4; j++) {
                         const spreadAngle = baseAngle + (j - 1.5) * 0.15;
-                        createBossBullet(boss, spreadAngle);
+                        createBossBullet(boss, spreadAngle, pattern);
                     }
                 }
                 boss.lastShot = currentTime;
@@ -3612,7 +3652,7 @@ function executeBossPattern(boss, pattern, currentTime) {
                     const spreadCount = 2 + Math.floor(Math.random() * 3); // 2~4개
                     for (let j = 0; j < spreadCount; j++) {
                         const spreadAngle = randomAngle + (j - spreadCount/2) * 0.3;
-                        createBossBullet(boss, spreadAngle);
+                        createBossBullet(boss, spreadAngle, pattern);
                     }
                 }
                 boss.lastShot = currentTime;
@@ -3622,7 +3662,17 @@ function executeBossPattern(boss, pattern, currentTime) {
 }
 
 // 보스 총알 생성 함수 수정
-function createBossBullet(boss, angle) {
+function createBossBullet(boss, angle, pattern = null) {
+    // 실제 실행 중인 패턴을 우선적으로 사용
+    let bulletPattern = pattern;
+    if (!bulletPattern && boss.currentPatterns && boss.currentPatterns.length > 0) {
+        bulletPattern = boss.currentPatterns[0]; // 현재 실행 중인 첫 번째 패턴 사용
+    }
+    if (!bulletPattern) {
+        bulletPattern = boss.pattern; // 기본 패턴 사용
+    }
+    
+    
     const bullet = {
         x: boss.x + boss.width/2,
         y: boss.y + boss.height/2,
@@ -3635,7 +3685,8 @@ function createBossBullet(boss, angle) {
         trail: [], // 총알 꼬리 효과를 위한 배열
         glow: 1, // 빛나는 효과를 위한 값
         rotation: 0, // 회전 효과를 위한 값
-        rotationSpeed: 0.1 // 회전 속도
+        rotationSpeed: 0.1, // 회전 속도
+        pattern: bulletPattern // 패턴 정보 저장
     };
     bullets.push(bullet);
 }
