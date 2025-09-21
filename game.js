@@ -2468,9 +2468,9 @@ function drawUI() {
         const remainingTime = Math.ceil((10000 - (Date.now() - secondPlaneTimer)) / 1000);
         ctx.fillText(`추가 비행기 남은 시간: ${remainingTime}초`, 10, 180);
     }
-    ctx.fillText(`일시정지: P키`, 10, 240);
+    ctx.fillText(`일시정지: P키`, 10, 210);
     
-    // 남은 목숨 표시 (일시정지 다음 줄로 이동)
+    // 남은 목숨 표시
     if (lifeWarningTimer > 0) {
         // 경고 깜빡임 효과 - 흰 배경에 빨간 텍스트
         const blinkSpeed = 200; // 깜빡임 속도 (밀리초)
@@ -2480,23 +2480,23 @@ function drawUI() {
         if (isVisible) {
             // 흰 배경
             ctx.fillStyle = 'white';
-            ctx.fillRect(5, 250, 200, 30);
+            ctx.fillRect(5, 220, 200, 30);
             
             // 빨간 텍스트
             ctx.fillStyle = 'red';
             ctx.font = 'bold 20px Arial';
-            ctx.fillText(`남은 목숨: ${maxLives - collisionCount}`, 10, 270);
+            ctx.fillText(`남은 목숨: ${maxLives - collisionCount}`, 10, 240);
         } else {
             // 일반 표시 (빨간 텍스트)
             ctx.fillStyle = 'red';
             ctx.font = '20px Arial';
-            ctx.fillText(`남은 목숨: ${maxLives - collisionCount}`, 10, 270);
+            ctx.fillText(`남은 목숨: ${maxLives - collisionCount}`, 10, 240);
         }
     } else {
         // 일반 표시 (빨간 텍스트)
         ctx.fillStyle = 'red';
         ctx.font = '20px Arial';
-        ctx.fillText(`남은 목숨: ${maxLives - collisionCount}`, 10, 270);
+        ctx.fillText(`남은 목숨: ${maxLives - collisionCount}`, 10, 240);
     }
     
     // 특수 무기 게이지 및 개수 표시
@@ -2515,7 +2515,7 @@ function drawUI() {
     } else {
         ctx.fillStyle = 'rgba(0, 0, 255, 0.3)';  // 원래 색상 복구
     }
-    ctx.fillRect(10, 300, 200, 20);
+    ctx.fillRect(10, 270, 200, 20);
     
     // 게이지 바 - 청록색
     if (hasSpecialWeapon) {
@@ -2523,7 +2523,7 @@ function drawUI() {
     } else {
         ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';  // 청록색 게이지
     }
-    ctx.fillRect(10, 300, (specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE) * 200, 20);
+    ctx.fillRect(10, 270, (specialWeaponCharge / SPECIAL_WEAPON_MAX_CHARGE) * 200, 20);
     
     // 테두리 효과 - 원상복구
     if (hasSpecialWeapon) {
@@ -2532,7 +2532,7 @@ function drawUI() {
         ctx.strokeStyle = 'cyan';  // 원래 색상 복구
     }
     ctx.lineWidth = 2;
-    ctx.strokeRect(10, 300, 200, 20);
+    ctx.strokeRect(10, 270, 200, 20);
     
     // 게이지 바 위에 텍스트 표시 (충전률과 보유 개수) - 원상복구
     if (hasSpecialWeapon) {
@@ -2543,19 +2543,19 @@ function drawUI() {
     ctx.font = 'bold 16px Arial';
     ctx.textAlign = 'center';
     const displayText = `특수무기: ${chargePercent}%(보유:${displayCount}/5개)`;
-    ctx.fillText(displayText, 110, 315);
+    ctx.fillText(displayText, 110, 285);
     
     // 준비 완료 메시지 (특수무기가 있을 때만)
     if (hasSpecialWeapon) {
         // 준비 완료 메시지 배경
         ctx.fillStyle = isRed ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 0, 255, 0.2)';
-        ctx.fillRect(10, 320, 300, 30);
+        ctx.fillRect(10, 300, 300, 30);
         
         // 텍스트 색상 설정
         ctx.fillStyle = isRed ? 'red' : 'cyan';
         ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText('특수무기 발사(알파벳 "B"키 클릭)', 15, 340);
+        ctx.fillText('특수무기 발사(알파벳 "B"키 클릭)', 15, 320);
     }
 
     // 제작자 정보 표시
