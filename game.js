@@ -193,7 +193,18 @@ const BOSS_PATTERNS = {
     DOUBLE_SPIRAL: 'double_spiral',
     TRIPLE_WAVE: 'triple_wave',
     TARGETED_SHOT: 'targeted_shot',
-    BURST_SHOT: 'burst_shot'
+    BURST_SHOT: 'burst_shot',
+    // 새로운 패턴들 추가
+    SPREAD_CIRCLE: 'spread_circle',        // 확산 원형 패턴
+    SPREAD_CROSS: 'spread_cross',          // 확산 십자 패턴
+    SPREAD_SPIRAL: 'spread_spiral',        // 확산 나선 패턴
+    SPREAD_WAVE: 'spread_wave',            // 확산 파도 패턴
+    SPREAD_DIAMOND: 'spread_diamond',      // 확산 다이아몬드 패턴
+    SPREAD_BURST: 'spread_burst',          // 확산 폭발 패턴
+    SPREAD_TARGETED: 'spread_targeted',    // 확산 추적 패턴
+    SPREAD_RANDOM: 'spread_random',        // 확산 랜덤 패턴
+    MEGA_SPREAD: 'mega_spread',            // 메가 확산 패턴
+    CHAOS_SPREAD: 'chaos_spread'           // 카오스 확산 패턴
 };
 
 // 키보드 입력 상태
@@ -3245,7 +3256,18 @@ function handleBossPattern(boss) {
         BOSS_PATTERNS.DOUBLE_SPIRAL,
         BOSS_PATTERNS.TRIPLE_WAVE,
         BOSS_PATTERNS.TARGETED_SHOT,
-        BOSS_PATTERNS.BURST_SHOT
+        BOSS_PATTERNS.BURST_SHOT,
+        // 새로운 확산 패턴들
+        BOSS_PATTERNS.SPREAD_CIRCLE,
+        BOSS_PATTERNS.SPREAD_CROSS,
+        BOSS_PATTERNS.SPREAD_SPIRAL,
+        BOSS_PATTERNS.SPREAD_WAVE,
+        BOSS_PATTERNS.SPREAD_DIAMOND,
+        BOSS_PATTERNS.SPREAD_BURST,
+        BOSS_PATTERNS.SPREAD_TARGETED,
+        BOSS_PATTERNS.SPREAD_RANDOM,
+        BOSS_PATTERNS.MEGA_SPREAD,
+        BOSS_PATTERNS.CHAOS_SPREAD
     ];
     
     // 레벨별 패턴 시스템
@@ -3449,6 +3471,150 @@ function executeBossPattern(boss, pattern, currentTime) {
                 }
                 // 중앙에 추가 발사
                 createBossBullet(boss, Math.PI / 2);
+                boss.lastShot = currentTime;
+            }
+            break;
+            
+        // 새로운 확산 패턴들
+        case BOSS_PATTERNS.SPREAD_CIRCLE:
+            if (currentTime - boss.lastShot >= 600) {  // 0.6초마다 발사
+                // 원형 확산 패턴 - 각 방향마다 3발씩 발사
+                for (let i = 0; i < 12; i++) {
+                    const baseAngle = (Math.PI * 2 / 12) * i;
+                    for (let j = 0; j < 3; j++) {
+                        const spreadAngle = baseAngle + (j - 1) * 0.2; // ±0.2 라디안 확산
+                        createBossBullet(boss, spreadAngle);
+                    }
+                }
+                boss.lastShot = currentTime;
+            }
+            break;
+            
+        case BOSS_PATTERNS.SPREAD_CROSS:
+            if (currentTime - boss.lastShot >= 500) {  // 0.5초마다 발사
+                // 십자 확산 패턴
+                const crossAngles = [0, Math.PI/2, Math.PI, Math.PI*3/2];
+                crossAngles.forEach(angle => {
+                    for (let i = 0; i < 5; i++) {
+                        const spreadAngle = angle + (i - 2) * 0.15; // ±0.3 라디안 확산
+                        createBossBullet(boss, spreadAngle);
+                    }
+                });
+                boss.lastShot = currentTime;
+            }
+            break;
+            
+        case BOSS_PATTERNS.SPREAD_SPIRAL:
+            if (currentTime - boss.lastShot >= 200) {  // 0.2초마다 발사
+                // 나선 확산 패턴
+                for (let i = 0; i < 3; i++) {
+                    const baseAngle = boss.patternAngle + (i * Math.PI * 2 / 3);
+                    for (let j = 0; j < 3; j++) {
+                        const spreadAngle = baseAngle + (j - 1) * 0.2;
+                        createBossBullet(boss, spreadAngle);
+                    }
+                }
+                boss.patternAngle += Math.PI / 8;  // 22.5도씩 회전
+                boss.lastShot = currentTime;
+            }
+            break;
+            
+        case BOSS_PATTERNS.SPREAD_WAVE:
+            if (currentTime - boss.lastShot >= 300) {  // 0.3초마다 발사
+                // 파도 확산 패턴
+                const waveCount = 5;
+                for (let i = 0; i < waveCount; i++) {
+                    const baseAngle = Math.PI / 2 + Math.sin(boss.patternAngle + i * 0.5) * 0.8;
+                    for (let j = 0; j < 3; j++) {
+                        const spreadAngle = baseAngle + (j - 1) * 0.25;
+                        createBossBullet(boss, spreadAngle);
+                    }
+                }
+                boss.patternAngle += Math.PI / 12;
+                boss.lastShot = currentTime;
+            }
+            break;
+            
+        case BOSS_PATTERNS.SPREAD_DIAMOND:
+            if (currentTime - boss.lastShot >= 700) {  // 0.7초마다 발사
+                // 다이아몬드 확산 패턴
+                const diamondAngles = [Math.PI/4, Math.PI*3/4, Math.PI*5/4, Math.PI*7/4];
+                diamondAngles.forEach(angle => {
+                    for (let i = 0; i < 4; i++) {
+                        const spreadAngle = angle + (i - 1.5) * 0.2;
+                        createBossBullet(boss, spreadAngle);
+                    }
+                });
+                boss.lastShot = currentTime;
+            }
+            break;
+            
+        case BOSS_PATTERNS.SPREAD_BURST:
+            if (currentTime - boss.lastShot >= 800) {  // 0.8초마다 발사
+                // 폭발 확산 패턴
+                for (let i = 0; i < 16; i++) {
+                    const baseAngle = (Math.PI * 2 / 16) * i;
+                    for (let j = 0; j < 2; j++) {
+                        const spreadAngle = baseAngle + (j - 0.5) * 0.3;
+                        createBossBullet(boss, spreadAngle);
+                    }
+                }
+                boss.lastShot = currentTime;
+            }
+            break;
+            
+        case BOSS_PATTERNS.SPREAD_TARGETED:
+            if (currentTime - boss.lastShot >= 400) {  // 0.4초마다 발사
+                // 추적 확산 패턴
+                const angleToPlayer = Math.atan2(player.y - boss.y, player.x - boss.x);
+                for (let i = 0; i < 7; i++) {
+                    const spreadAngle = angleToPlayer + (i - 3) * 0.2;
+                    createBossBullet(boss, spreadAngle);
+                }
+                boss.lastShot = currentTime;
+            }
+            break;
+            
+        case BOSS_PATTERNS.SPREAD_RANDOM:
+            if (currentTime - boss.lastShot >= 350) {  // 0.35초마다 발사
+                // 랜덤 확산 패턴
+                for (let i = 0; i < 8; i++) {
+                    const randomAngle = Math.random() * Math.PI * 2;
+                    for (let j = 0; j < 2; j++) {
+                        const spreadAngle = randomAngle + (j - 0.5) * 0.4;
+                        createBossBullet(boss, spreadAngle);
+                    }
+                }
+                boss.lastShot = currentTime;
+            }
+            break;
+            
+        case BOSS_PATTERNS.MEGA_SPREAD:
+            if (currentTime - boss.lastShot >= 1000) {  // 1초마다 발사
+                // 메가 확산 패턴 - 매우 강력한 패턴
+                for (let i = 0; i < 24; i++) {
+                    const baseAngle = (Math.PI * 2 / 24) * i;
+                    for (let j = 0; j < 4; j++) {
+                        const spreadAngle = baseAngle + (j - 1.5) * 0.15;
+                        createBossBullet(boss, spreadAngle);
+                    }
+                }
+                boss.lastShot = currentTime;
+            }
+            break;
+            
+        case BOSS_PATTERNS.CHAOS_SPREAD:
+            if (currentTime - boss.lastShot >= 250) {  // 0.25초마다 발사
+                // 카오스 확산 패턴 - 예측 불가능한 패턴
+                const chaosCount = 6 + Math.floor(Math.random() * 6); // 6~11개
+                for (let i = 0; i < chaosCount; i++) {
+                    const randomAngle = Math.random() * Math.PI * 2;
+                    const spreadCount = 2 + Math.floor(Math.random() * 3); // 2~4개
+                    for (let j = 0; j < spreadCount; j++) {
+                        const spreadAngle = randomAngle + (j - spreadCount/2) * 0.3;
+                        createBossBullet(boss, spreadAngle);
+                    }
+                }
                 boss.lastShot = currentTime;
             }
             break;
