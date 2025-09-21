@@ -216,7 +216,7 @@ const difficultySettings = {
         horizontalSpeedRange: 2,
         patternChance: 0.2,
         maxEnemies: 5,
-        bossHealth: 2000,
+        bossHealth: 3000,
         bossSpawnInterval: 60000, // 1분
         powerUpChance: 0.1,
         bombDropChance: 0.1,
@@ -228,7 +228,7 @@ const difficultySettings = {
         horizontalSpeedRange: 3,
         patternChance: 0.4,
         maxEnemies: 8,
-        bossHealth: 2500,
+        bossHealth: 4000,
         bossSpawnInterval: 45000, // 45초
         powerUpChance: 0.15,
         bombDropChance: 0.15,
@@ -240,7 +240,7 @@ const difficultySettings = {
         horizontalSpeedRange: 4,
         patternChance: 0.6,
         maxEnemies: 12,
-        bossHealth: 3000,
+        bossHealth: 5000,
         bossSpawnInterval: 30000, // 30초
         powerUpChance: 0.2,
         bombDropChance: 0.2,
@@ -252,7 +252,7 @@ const difficultySettings = {
         horizontalSpeedRange: 5,
         patternChance: 0.8,
         maxEnemies: 15,
-        bossHealth: 3500,
+        bossHealth: 6000,
         bossSpawnInterval: 25000, // 25초
         powerUpChance: 0.25,
         bombDropChance: 0.25,
@@ -264,7 +264,7 @@ const difficultySettings = {
         horizontalSpeedRange: 6,
         patternChance: 1.0,
         maxEnemies: 20,
-        bossHealth: 4000,
+        bossHealth: 7000,
         bossSpawnInterval: 20000, // 20초
         powerUpChance: 0.3,
         bombDropChance: 0.3,
